@@ -1,14 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import { userStory } from "./data/story";
+import Progess from "./components/Progess";
 
 export default function App() {
   const [currIndex, setCurrIndex] = useState(0);
   const [openStoryView, setOpenStoryView] = useState(false);
   const intervalRef = useRef(null);
   const [fadeKey, setFadeKey] = useState(0);
+  const [width, setWidth] = useState(0);
+  const widthIntervalRef = useRef(null);
+  const timerRef = useRef(null);
+
   useEffect(() => {
     if (intervalRef.current && currIndex == userStory.length - 1) {
       clearInterval(intervalRef.current);
+      timerRef.current = setTimeout(() => {
+        setOpenStoryView(false);
+        clearInterval(widthIntervalRef.current);
+        widthIntervalRef.current = null;
+        setCurrIndex(0);
+        setWidth(0);
+      }, 5000);
     }
   }, [currIndex]);
   const handleStartIndex = (index) => {
@@ -21,16 +33,21 @@ export default function App() {
     }, 5000);
   };
   const handlePreviousStory = () => {
-    if (currIndex != 0) {
+    if (currIndex > 0) {
       setFadeKey((prev) => prev + 1);
       setCurrIndex((prev) => prev - 1);
       clearInterval(intervalRef.current);
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
       intervalRef.current = setInterval(() => {
         setCurrIndex((prev) => prev + 1);
         setFadeKey((prev) => prev + 1);
       }, 5000);
-    } else {
-      clearInterval(intervalRef.current);
+      if (width != 0 && widthIntervalRef.current) {
+        setWidth(0);
+        clearInterval(widthIntervalRef.current);
+        widthIntervalRef.current = null;
+      }
     }
   };
   const handleNextStory = () => {
@@ -38,12 +55,17 @@ export default function App() {
       setFadeKey((prev) => prev + 1);
       setCurrIndex((prev) => prev + 1);
       clearInterval(intervalRef.current);
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
       intervalRef.current = setInterval(() => {
         setCurrIndex((prev) => prev + 1);
         setFadeKey((prev) => prev + 1);
       }, 5000);
-    } else {
-      clearInterval(intervalRef.current);
+      if (width != 0 && widthIntervalRef.current) {
+        setWidth(0);
+        clearInterval(widthIntervalRef.current);
+        widthIntervalRef.current = null;
+      }
     }
   };
 
@@ -55,7 +77,7 @@ export default function App() {
       <div className="hidden lg:flex justify-center  text-green-400 font-extrabold">
         Switch to Mobile Screen Mode for better experience.
       </div>
-      <div className="lg:hidden w-full h-fit py-2 px-2 overflow-x-auto">
+      <div className="lg:hidden  w-full h-fit py-2 px-2 overflow-x-auto">
         <div className="flex space-x-4">
           {userStory.map((user, index) => (
             <div
@@ -85,13 +107,25 @@ export default function App() {
             className="absolute right-0 top-0 h-full w-1/2 cursor-pointer"
             onClick={handleNextStory}
           ></div>
-
+          <div className="absolute top-0 left-0 z-10 w-full">
+            <Progess
+              width={width}
+              setWidth={setWidth}
+              widthIntervalRef={widthIntervalRef}
+            />
+          </div>
           <div
             className="absolute right-2 top-2  font-extrabold text-white z-10 bg-gray-500 rounded-full px-2 py-2"
             onClick={(e) => {
               e.stopPropagation();
               setOpenStoryView(false);
               clearInterval(intervalRef.current);
+              clearInterval(widthIntervalRef.current);
+              widthIntervalRef.current = null;
+              setWidth(0);
+              clearTimeout(timerRef.current);
+              timerRef.current = null;
+              setCurrIndex(0);
             }}
           >
             <svg
